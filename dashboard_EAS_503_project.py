@@ -24,8 +24,9 @@ salary_data = fetch_data(salary_query)
 performance_query = "SELECT * FROM Performance"
 performance_data = fetch_data(performance_query)
 
-department_qery = "SELECT * FROM Department"
-department_data = fetch_data(department_qery)
+# Removed department query since it's not used in the analysis
+# department_query = "SELECT * FROM Department"
+# department_data = fetch_data(department_query)
 
 # Merge datasets for easier exploration
 merged_data_query = """
@@ -66,10 +67,11 @@ selected_tenure_range = st.sidebar.slider("Select Tenure Range (Years)",
 filtered_data = merged_data[
     (merged_data["Gender"].isin(selected_gender)) &
     (merged_data["City"].isin(selected_city)) &
-    (merged_data["Salary"].between(selected_salary_range[0], selected_salary_range[1]))
+    (merged_data["Country"].isin(selected_country)) &  # Ensure this filter is also applied
+    (merged_data["Salary"].between(selected_salary_range[0], selected_salary_range[1])) &
+    (merged_data["Age"].between(selected_age_range[0], selected_age_range[1])) &
+    (merged_data["Tenure"].between(selected_tenure_range[0], selected_tenure_range[1]))  # Apply tenure filter
 ]
-
-
 
 # Dynamic Metrics
 st.subheader("Key Metrics")
@@ -98,10 +100,6 @@ filtered_data['Working_Hours'] = pd.to_numeric(filtered_data['Working_Hours'], e
 # Drop rows with any NaN values in the relevant columns
 filtered_data = filtered_data.dropna(subset=['Salary', 'Performance_Score', 'Tenure', 'Working_Hours'])
 
-# Check again to confirm data types and missing values
-print(filtered_data.dtypes)
-print(filtered_data.isnull().sum())
-
 # Now proceed to plot
 st.subheader("Performance Score by Salary")
 salary_perf_fig = px.scatter(
@@ -115,8 +113,7 @@ salary_perf_fig = px.scatter(
     color_continuous_scale="Viridis"
 )
 
-# Show the figure (for Streamlit or Jupyter environments, you can use `salary_perf_fig.show()`)
-salary_perf_fig.show()
+st.plotly_chart(salary_perf_fig)
 
 # Visualization 3: Average Salary by Country
 st.subheader("Average Salary by Country")
@@ -198,7 +195,6 @@ tenure_salary_fig = px.scatter(
 )
 st.plotly_chart(tenure_salary_fig)
 
-
 # Create Age Groups
 filtered_data["Age_Group"] = pd.cut(filtered_data["Age"], bins=[20, 30, 40, 50, 60, 70], labels=["20-30", "30-40", "40-50", "50-60", "60-70"])
 
@@ -217,8 +213,6 @@ age_perf_fig = px.bar(
 )
 st.plotly_chart(age_perf_fig)
 
-
-
 # Visualization: Join Date Distribution
 st.subheader("Join Date Distribution")
 join_date_fig = px.histogram(
@@ -229,7 +223,6 @@ join_date_fig = px.histogram(
     color="Gender"
 )
 st.plotly_chart(join_date_fig)
-
 
 # Visualization: Performance Score vs Working Hours
 st.subheader("Performance Score vs Working Hours")
@@ -249,8 +242,6 @@ numeric_data = filtered_data.select_dtypes(include=['number'])
 correlation = numeric_data.corr()
 st.write("### Correlation between Salary and Performance Score")
 st.write(correlation.loc['Salary', 'Performance_Score'])
-
-
 
 # Check if 'Performance_Score' exists and is numeric
 if 'Performance_Score' in filtered_data.columns:
