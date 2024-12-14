@@ -24,10 +24,13 @@ salary_data = fetch_data(salary_query)
 performance_query = "SELECT * FROM Performance"
 performance_data = fetch_data(performance_query)
 
+department_qery = "SELECT * FROM Department"
+department_data = fetch_data(department_qery)
+
 # Merge datasets for easier exploration
 merged_data_query = """
 SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure,
-       s.Salary, s.Annual_Bonus, s.Bonus_Percentage,
+       s.Salary, s.Annual_Bonus, s.Bonus_Percentage,d.Department_Name
        p.Performance_Score, p.Working_Hours
 FROM Employee e
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
@@ -45,6 +48,7 @@ st.title("Employee Data Analysis Dashboard")
 st.sidebar.header("Filters")
 selected_gender = st.sidebar.multiselect("Select Gender", options=employee_data["Gender"].unique(), default=employee_data["Gender"].unique())
 selected_city = st.sidebar.multiselect("Select City", options=employee_data["City"].unique(), default=employee_data["City"].unique())
+selected_country = st.sidebar.multiselect("Select Country", options=employee_data["Country"].unique(), default=employee_data["Country"].unique())  # New Country filter
 selected_salary_range = st.sidebar.slider(
     "Select Salary Range", 
     min_value=float(salary_data["Salary"].min()), 
@@ -186,9 +190,11 @@ st.plotly_chart(tenure_salary_fig)
 # Create Age Groups
 filtered_data["Age_Group"] = pd.cut(filtered_data["Age"], bins=[20, 30, 40, 50, 60, 70], labels=["20-30", "30-40", "40-50", "50-60", "60-70"])
 
-# Visualization: Average Performance Score by Age Group
+# Grouping and calculating the average performance score by Age Group
 st.subheader("Average Performance Score by Age Group")
-avg_perf_age_group = filtered_data.groupby("Age_Group")["Performance_Score"].mean().reset_index()
+avg_perf_age_group = filtered_data.groupby("Age_Group", observed=False)["Performance_Score"].mean().reset_index()
+
+# Create a bar chart
 age_perf_fig = px.bar(
     avg_perf_age_group,
     x="Age_Group",
@@ -198,6 +204,7 @@ age_perf_fig = px.bar(
     color_continuous_scale="Viridis"
 )
 st.plotly_chart(age_perf_fig)
+
 
 
 # Visualization: Join Date Distribution
