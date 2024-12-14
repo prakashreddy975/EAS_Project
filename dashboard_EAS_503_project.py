@@ -45,6 +45,8 @@ st.title("Employee Data Analysis Dashboard")
 st.sidebar.header("Filters")
 selected_gender = st.sidebar.multiselect("Select Gender", options=employee_data["Gender"].unique(), default=employee_data["Gender"].unique())
 selected_city = st.sidebar.multiselect("Select City", options=employee_data["City"].unique(), default=employee_data["City"].unique())
+selected_country = st.sidebar.multiselect("Select Country", options=employee_data["Country"].unique(), default=employee_data["Country"].unique())  # New Country filter
+selected_department = st.sidebar.multiselect("Select Department", options=employee_data["Department"].unique(), default=employee_data["Department"].unique())  # New Department filter
 selected_salary_range = st.sidebar.slider(
     "Select Salary Range", 
     min_value=float(salary_data["Salary"].min()), 
@@ -52,12 +54,39 @@ selected_salary_range = st.sidebar.slider(
     value=(float(salary_data["Salary"].min()), float(salary_data["Salary"].max()))
 )
 
+selected_age_range = st.sidebar.slider("Select Age Range", 
+                                       min_value=int(employee_data["Age"].min()), 
+                                       max_value=int(employee_data["Age"].max()), 
+                                       value=(int(employee_data["Age"].min()), int(employee_data["Age"].max())))
+selected_tenure_range = st.sidebar.slider("Select Tenure Range (Years)", 
+                                          min_value=int(employee_data["Tenure"].min()), 
+                                          max_value=int(employee_data["Tenure"].max()), 
+                                          value=(int(employee_data["Tenure"].min()), int(employee_data["Tenure"].max())))
+
 # Apply Filters
 filtered_data = merged_data[
     (merged_data["Gender"].isin(selected_gender)) &
     (merged_data["City"].isin(selected_city)) &
     (merged_data["Salary"].between(selected_salary_range[0], selected_salary_range[1]))
 ]
+
+# New Filters: Performance Score Range and Bonus Percentage Range
+selected_perf_score_range = st.sidebar.slider(
+    "Select Performance Score Range", 
+    min_value=float(performance_data["Performance_Score"].min()), 
+    max_value=float(performance_data["Performance_Score"].max()), 
+    value=(float(performance_data["Performance_Score"].min()), float(performance_data["Performance_Score"].max()))
+)
+
+selected_bonus_percentage_range = st.sidebar.slider(
+    "Select Bonus Percentage Range", 
+    min_value=float(salary_data["Bonus_Percentage"].min()), 
+    max_value=float(salary_data["Bonus_Percentage"].max()), 
+    value=(float(salary_data["Bonus_Percentage"].min()), float(salary_data["Bonus_Percentage"].max()))
+)
+
+
+
 
 # Dynamic Metrics
 st.subheader("Key Metrics")
@@ -213,7 +242,15 @@ working_hours_perf_fig = px.scatter(
 )
 st.plotly_chart(working_hours_perf_fig)
 
+# Correlation between Salary and Performance Score
+st.subheader("Correlation Analysis")
+correlation = multivariate_data.corr()
+st.write("### Correlation between Salary and Performance Score")
+st.write(correlation.loc['Salary', 'Performance_Score'])
 
+# Variance of Performance Score
+performance_variance = multivariate_data['Performance_Score'].var()
+st.write(f"### Variance of Performance Score: {performance_variance:.2f}")
 
 
 # Display Filtered Data
