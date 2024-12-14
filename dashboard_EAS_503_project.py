@@ -38,9 +38,6 @@ JOIN Performance p ON e.Employee_ID = p.Employee_ID
 """
 merged_data = fetch_data(merged_data_query)
 
-# Handle NaN values by filtering out rows with NaN in relevant columns
-merged_data = merged_data.dropna(subset=["Salary", "Performance_Score", "Working_Hours"])
-
 # Streamlit Dashboard
 st.title("Employee Data Analysis Dashboard")
 
