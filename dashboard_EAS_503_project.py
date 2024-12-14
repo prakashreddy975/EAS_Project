@@ -5,7 +5,7 @@ import plotly.express as px
 
 
 # Connect to the database
-conn = sqlite3.connect('/Users/prakashreddypasham/Desktop/CLASSES/PYTHON/PROJECT/Employees/employee_database.db')
+conn = sqlite3.connect('employee_database.db')
 
 
 # Helper function to fetch data from SQL
