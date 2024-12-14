@@ -226,12 +226,12 @@ st.plotly_chart(working_hours_perf_fig)
 
 # Correlation between Salary and Performance Score
 st.subheader("Correlation Analysis")
-correlation = multivariate_data.corr()
+correlation = filtered_data.corr()
 st.write("### Correlation between Salary and Performance Score")
 st.write(correlation.loc['Salary', 'Performance_Score'])
 
 # Variance of Performance Score
-performance_variance = multivariate_data['Performance_Score'].var()
+performance_variance = filtered_data['Performance_Score'].var()
 st.write(f"### Variance of Performance Score: {performance_variance:.2f}")
 
 
