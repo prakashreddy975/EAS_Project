@@ -142,6 +142,80 @@ heatmap_fig = px.imshow(
 )
 st.plotly_chart(heatmap_fig)
 
+# Visualization: Salary Distribution by Gender
+st.subheader("Salary Distribution by Gender")
+salary_gender_fig = px.box(
+    filtered_data,
+    x="Gender",
+    y="Salary",
+    color="Gender",
+    title="Salary Distribution by Gender",
+    boxmode="overlay"
+)
+st.plotly_chart(salary_gender_fig)
+
+# Top 10 Highest Paid Employees
+st.subheader("Top 10 Highest Paid Employees")
+top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Performance_Score"]]
+st.dataframe(top_paid)
+
+# Visualization: Tenure vs Salary
+st.subheader("Tenure vs Salary")
+tenure_salary_fig = px.scatter(
+    filtered_data,
+    x="Tenure",
+    y="Salary",
+    color="Gender",
+    hover_data=["Name", "City"],
+    title="Tenure vs Salary"
+)
+st.plotly_chart(tenure_salary_fig)
+
+
+# Create Age Groups
+filtered_data["Age_Group"] = pd.cut(filtered_data["Age"], bins=[20, 30, 40, 50, 60, 70], labels=["20-30", "30-40", "40-50", "50-60", "60-70"])
+
+# Visualization: Average Performance Score by Age Group
+st.subheader("Average Performance Score by Age Group")
+avg_perf_age_group = filtered_data.groupby("Age_Group")["Performance_Score"].mean().reset_index()
+age_perf_fig = px.bar(
+    avg_perf_age_group,
+    x="Age_Group",
+    y="Performance_Score",
+    title="Average Performance Score by Age Group",
+    color="Performance_Score",
+    color_continuous_scale="Viridis"
+)
+st.plotly_chart(age_perf_fig)
+
+
+# Visualization: Join Date Distribution
+st.subheader("Join Date Distribution")
+join_date_fig = px.histogram(
+    filtered_data,
+    x="Join_Date",
+    title="Join Date Distribution",
+    nbins=30,
+    color="Gender"
+)
+st.plotly_chart(join_date_fig)
+
+
+# Visualization: Performance Score vs Working Hours
+st.subheader("Performance Score vs Working Hours")
+working_hours_perf_fig = px.scatter(
+    filtered_data,
+    x="Working_Hours",
+    y="Performance_Score",
+    color="Gender",
+    hover_data=["Name", "City"],
+    title="Performance Score vs Working Hours"
+)
+st.plotly_chart(working_hours_perf_fig)
+
+
+
+
 # Display Filtered Data
 st.write("### Filtered Data")
 st.dataframe(filtered_data)
