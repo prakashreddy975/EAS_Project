@@ -7,6 +7,7 @@ import plotly.express as px
 conn = sqlite3.connect('employee_database.db')
 
 # Helper function to fetch data from SQL
+# Helper function to fetch data from SQL
 def fetch_data(query):
     try:
         return pd.read_sql_query(query, conn)
@@ -24,7 +25,7 @@ salary_data = fetch_data(salary_query)
 performance_query = "SELECT * FROM Performance"
 performance_data = fetch_data(performance_query)
 
-# Merge datasets for easier exploration
+# Modified SQL query to include Department data
 merged_data_query = """
 SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure, 
        s.Salary, s.Annual_Bonus, s.Bonus_Percentage, 
@@ -32,12 +33,18 @@ SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e
 FROM Employee e
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
 JOIN Performance p ON e.Employee_ID = p.Employee_ID
-JOIN Department d ON e.Employee_ID = d.Employee_ID  # Assuming Department info is in the Department table
+JOIN Department d ON e.Employee_ID = d.Employee_ID
 """
 merged_data = fetch_data(merged_data_query)
 
-# Handle NaN values by filtering out rows with NaN in relevant columns
-merged_data = merged_data.dropna(subset=["Salary", "Performance_Score", "Working_Hours"])
+# Ensure the required columns exist before applying dropna
+required_columns = ["Salary", "Performance_Score", "Working_Hours"]
+missing_columns = [col for col in required_columns if col not in merged_data.columns]
+
+if missing_columns:
+    st.error(f"Missing columns: {', '.join(missing_columns)}")
+else:
+    merged_data = merged_data.dropna(subset=required_columns)
 
 # Streamlit Dashboard
 st.title("Employee Data Analysis Dashboard")
