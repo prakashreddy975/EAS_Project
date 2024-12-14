@@ -26,12 +26,13 @@ performance_data = fetch_data(performance_query)
 
 # Merge datasets for easier exploration
 merged_data_query = """
-SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure,
-       s.Salary, s.Annual_Bonus, s.Bonus_Percentage,
-       p.Performance_Score, p.Working_Hours
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure, 
+       s.Salary, s.Annual_Bonus, s.Bonus_Percentage, 
+       p.Performance_Score, p.Working_Hours, d.Department
 FROM Employee e
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
 JOIN Performance p ON e.Employee_ID = p.Employee_ID
+JOIN Department d ON e.Employee_ID = d.Employee_ID  # Assuming Department info is in the Department table
 """
 merged_data = fetch_data(merged_data_query)
 
