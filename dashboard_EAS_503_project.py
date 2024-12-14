@@ -7,7 +7,6 @@ import plotly.express as px
 conn = sqlite3.connect('employee_database.db')
 
 # Helper function to fetch data from SQL
-# Helper function to fetch data from SQL
 def fetch_data(query):
     try:
         return pd.read_sql_query(query, conn)
@@ -25,26 +24,19 @@ salary_data = fetch_data(salary_query)
 performance_query = "SELECT * FROM Performance"
 performance_data = fetch_data(performance_query)
 
-# Modified SQL query to include Department data
+# Merge datasets for easier exploration
 merged_data_query = """
-SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure, 
-       s.Salary, s.Annual_Bonus, s.Bonus_Percentage, 
-       p.Performance_Score, p.Working_Hours, d.Department
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure,
+       s.Salary, s.Annual_Bonus, s.Bonus_Percentage,
+       p.Performance_Score, p.Working_Hours
 FROM Employee e
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
 JOIN Performance p ON e.Employee_ID = p.Employee_ID
-JOIN Department d ON e.Employee_ID = d.Employee_ID
 """
 merged_data = fetch_data(merged_data_query)
 
-# Ensure the required columns exist before applying dropna
-required_columns = ["Salary", "Performance_Score", "Working_Hours"]
-missing_columns = [col for col in required_columns if col not in merged_data.columns]
-
-if missing_columns:
-    st.error(f"Missing columns: {', '.join(missing_columns)}")
-else:
-    merged_data = merged_data.dropna(subset=required_columns)
+# Handle NaN values by filtering out rows with NaN in relevant columns
+merged_data = merged_data.dropna(subset=["Salary", "Performance_Score", "Working_Hours"])
 
 # Streamlit Dashboard
 st.title("Employee Data Analysis Dashboard")
@@ -53,8 +45,6 @@ st.title("Employee Data Analysis Dashboard")
 st.sidebar.header("Filters")
 selected_gender = st.sidebar.multiselect("Select Gender", options=employee_data["Gender"].unique(), default=employee_data["Gender"].unique())
 selected_city = st.sidebar.multiselect("Select City", options=employee_data["City"].unique(), default=employee_data["City"].unique())
-selected_country = st.sidebar.multiselect("Select Country", options=employee_data["Country"].unique(), default=employee_data["Country"].unique())  # New Country filter
-selected_department = st.sidebar.multiselect("Select Department", options=employee_data["Department"].unique(), default=employee_data["Department"].unique())  # New Department filter
 selected_salary_range = st.sidebar.slider(
     "Select Salary Range", 
     min_value=float(salary_data["Salary"].min()), 
@@ -77,22 +67,6 @@ filtered_data = merged_data[
     (merged_data["City"].isin(selected_city)) &
     (merged_data["Salary"].between(selected_salary_range[0], selected_salary_range[1]))
 ]
-
-# New Filters: Performance Score Range and Bonus Percentage Range
-selected_perf_score_range = st.sidebar.slider(
-    "Select Performance Score Range", 
-    min_value=float(performance_data["Performance_Score"].min()), 
-    max_value=float(performance_data["Performance_Score"].max()), 
-    value=(float(performance_data["Performance_Score"].min()), float(performance_data["Performance_Score"].max()))
-)
-
-selected_bonus_percentage_range = st.sidebar.slider(
-    "Select Bonus Percentage Range", 
-    min_value=float(salary_data["Bonus_Percentage"].min()), 
-    max_value=float(salary_data["Bonus_Percentage"].max()), 
-    value=(float(salary_data["Bonus_Percentage"].min()), float(salary_data["Bonus_Percentage"].max()))
-)
-
 
 
 
