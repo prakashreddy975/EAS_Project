@@ -226,14 +226,25 @@ st.plotly_chart(working_hours_perf_fig)
 
 # Correlation between Salary and Performance Score
 st.subheader("Correlation Analysis")
-correlation = filtered_data.corr()
+numeric_data = filtered_data.select_dtypes(include=['number'])
+correlation = numeric_data.corr()
 st.write("### Correlation between Salary and Performance Score")
 st.write(correlation.loc['Salary', 'Performance_Score'])
 
-# Variance of Performance Score
-performance_variance = filtered_data['Performance_Score'].var()
-st.write(f"### Variance of Performance Score: {performance_variance:.2f}")
 
+
+# Check if 'Performance_Score' exists and is numeric
+if 'Performance_Score' in filtered_data.columns:
+    # Convert to numeric if necessary (handling any potential non-numeric values)
+    filtered_data['Performance_Score'] = pd.to_numeric(filtered_data['Performance_Score'], errors='coerce')
+    
+    # Calculate the variance, excluding NaN values
+    performance_variance = filtered_data['Performance_Score'].var()
+    
+    # Display the result
+    st.write(f"### Variance of Performance Score: {performance_variance:.2f}")
+else:
+    st.write("### Performance_Score column is missing.")
 
 # Display Filtered Data
 st.write("### Filtered Data")
