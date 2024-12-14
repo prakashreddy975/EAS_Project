@@ -92,10 +92,11 @@ gender_city_fig = px.sunburst(
 st.plotly_chart(gender_city_fig)
 
 # Visualization 2: Salary vs Performance Score with Tenure Comparison
-filtered_data['Salary'] = pd.to_numeric(filtered_data['Salary'], errors='coerce')
-filtered_data['Performance_Score'] = pd.to_numeric(filtered_data['Performance_Score'], errors='coerce')
-filtered_data['Tenure'] = pd.to_numeric(filtered_data['Tenure'], errors='coerce')
-filtered_data['Working_Hours'] = pd.to_numeric(filtered_data['Working_Hours'], errors='coerce')
+filtered_data.loc[:, 'Salary'] = pd.to_numeric(filtered_data['Salary'], errors='coerce')
+filtered_data.loc[:, 'Performance_Score'] = pd.to_numeric(filtered_data['Performance_Score'], errors='coerce')
+filtered_data.loc[:, 'Tenure'] = pd.to_numeric(filtered_data['Tenure'], errors='coerce')
+filtered_data.loc[:, 'Working_Hours'] = pd.to_numeric(filtered_data['Working_Hours'], errors='coerce')
+
 
 # Drop rows with any NaN values in the relevant columns
 filtered_data = filtered_data.dropna(subset=['Salary', 'Performance_Score', 'Tenure', 'Working_Hours'])
