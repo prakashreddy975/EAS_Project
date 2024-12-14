@@ -34,7 +34,7 @@ SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e
        p.Performance_Score, p.Working_Hours
 FROM Employee e
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
-JOIN Performance p ON e.Employee_ID = p.Employee_ID
+JOIN Performance p ON e.Employee_ID = p.Employee_ID;
 """
 merged_data = fetch_data(merged_data_query)
 
