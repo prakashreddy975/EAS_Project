@@ -186,6 +186,26 @@ salary_gender_fig = px.box(
 )
 st.plotly_chart(salary_gender_fig)
 
+
+# Fetch employee department data
+empl_dept_query = """
+SELECT d.Department_Name, COUNT(ed.Employee_ID) AS Employee_Count
+FROM Department d
+JOIN Employee_Department ed ON d.Department_ID = ed.Department_ID
+GROUP BY d.Department_Name
+ORDER BY Employee_Count DESC;
+"""
+empl_dept_data = fetch_data(empl_dept_query)
+
+# Employee Distribution by Department (Pie Chart)
+st.subheader("Employee Distribution by Department (Pie Chart)")
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.pie(empl_dept_data['Employee_Count'], labels=empl_dept_data['Department_Name'], autopct='%1.1f%%', colors=sns.color_palette('viridis', len(empl_dept_data)))
+ax.set_title('Employee Distribution by Department')
+ax.axis('equal')  # Equal aspect ratio ensures the pie chart is circular.
+st.pyplot(fig)
+
+
 # Top 10 Highest Paid Employees
 st.subheader("Top 10 Highest Paid Employees")
 top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Performance_Score", "Department_Name"]]
