@@ -3,8 +3,8 @@ import pandas as pd
 import sqlite3
 import plotly.express as px
 
-# Connect to the database
-conn = sqlite3.connect('employee_database.db')
+# Connect to the updated database
+conn = sqlite3.connect('employee_database_new.db')
 
 # Helper function to fetch data from SQL
 def fetch_data(query):
@@ -15,7 +15,12 @@ def fetch_data(query):
         return pd.DataFrame()
 
 # Load data for analysis
-employee_query = "SELECT * FROM Employee"
+employee_query = """
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, e.Tenure, 
+       l.City, l.Country
+FROM Employee e
+JOIN Location l ON e.Location_ID = l.Location_ID
+"""
 employee_data = fetch_data(employee_query)
 
 salary_query = "SELECT * FROM Salary"
@@ -24,20 +29,24 @@ salary_data = fetch_data(salary_query)
 performance_query = "SELECT * FROM Performance"
 performance_data = fetch_data(performance_query)
 
-# Removed department query since it's not used in the analysis
-# department_query = "SELECT * FROM Department"
-# department_data = fetch_data(department_query)
+department_query = "SELECT * FROM Department"
+department_data = fetch_data(department_query)
 
-# Merge datasets for easier exploration
-merged_data_query = """
-SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.City, e.Country, e.Join_Date, e.Tenure,
+# Employee-Department relationship query
+employee_department_query = """
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, e.Tenure, 
+       l.City, l.Country, 
        s.Salary, s.Annual_Bonus, s.Bonus_Percentage,
-       p.Performance_Score, p.Working_Hours
+       p.Performance_Score, p.Working_Hours,
+       d.Department_Name
 FROM Employee e
+JOIN Location l ON e.Location_ID = l.Location_ID
 JOIN Salary s ON e.Employee_ID = s.Employee_ID
 JOIN Performance p ON e.Employee_ID = p.Employee_ID
+JOIN Employee_Department ed ON e.Employee_ID = ed.Employee_ID
+JOIN Department d ON ed.Department_ID = d.Department_ID
 """
-merged_data = fetch_data(merged_data_query)
+merged_data = fetch_data(employee_department_query)
 
 # Streamlit Dashboard
 st.title("Employee Data Analysis Dashboard")
@@ -97,7 +106,6 @@ filtered_data.loc[:, 'Performance_Score'] = pd.to_numeric(filtered_data['Perform
 filtered_data.loc[:, 'Tenure'] = pd.to_numeric(filtered_data['Tenure'], errors='coerce')
 filtered_data.loc[:, 'Working_Hours'] = pd.to_numeric(filtered_data['Working_Hours'], errors='coerce')
 
-
 # Drop rows with any NaN values in the relevant columns
 filtered_data = filtered_data.dropna(subset=['Salary', 'Performance_Score', 'Tenure', 'Working_Hours'])
 
@@ -116,43 +124,42 @@ salary_perf_fig = px.scatter(
 
 st.plotly_chart(salary_perf_fig)
 
-# Visualization 3: Average Salary by Country
-st.subheader("Average Salary by Country")
-avg_salary_country = filtered_data.groupby("Country")["Salary"].mean().reset_index()
-country_salary_fig = px.bar(
-    avg_salary_country,
-    x="Country",
+# Visualization 3: Average Salary by Department
+st.subheader("Average Salary by Department")
+avg_salary_dept = filtered_data.groupby("Department_Name")["Salary"].mean().reset_index()
+department_salary_fig = px.bar(
+    avg_salary_dept,
+    x="Department_Name",
     y="Salary",
-    title="Average Salary by Country",
+    title="Average Salary by Department",
     color="Salary",
     color_continuous_scale="Blues"
 )
-st.plotly_chart(country_salary_fig)
+st.plotly_chart(department_salary_fig)
 
-# Visualization 4: Performance Score Distribution by Gender
-st.subheader("Performance Score Distribution by Gender")
-score_fig = px.box(
+# Visualization 4: Performance Score Distribution by Department
+st.subheader("Performance Score Distribution by Department")
+dept_perf_fig = px.box(
     filtered_data,
-    x="Gender",
+    x="Department_Name",
     y="Performance_Score",
-    color="Gender",
-    title="Performance Score Distribution by Gender",
+    color="Department_Name",
+    title="Performance Score Distribution by Department",
     boxmode="overlay"
 )
-st.plotly_chart(score_fig)
+st.plotly_chart(dept_perf_fig)
 
-# Visualization 5: Tenure Distribution by Gender
-st.subheader("Tenure Distribution by Gender")
-tenure_fig = px.histogram(
+# Visualization 5: Salary Distribution by Department
+st.subheader("Salary Distribution by Department")
+dept_salary_fig = px.box(
     filtered_data,
-    x="Tenure",
-    color="Gender",
-    title="Tenure Distribution by Gender",
-    nbins=20,
-    barmode="overlay",
-    opacity=0.7
+    x="Department_Name",
+    y="Salary",
+    color="Department_Name",
+    title="Salary Distribution by Department",
+    boxmode="overlay"
 )
-st.plotly_chart(tenure_fig)
+st.plotly_chart(dept_salary_fig)
 
 # Visualization 6: Correlation Heatmap
 st.subheader("Correlation Heatmap")
@@ -181,18 +188,18 @@ st.plotly_chart(salary_gender_fig)
 
 # Top 10 Highest Paid Employees
 st.subheader("Top 10 Highest Paid Employees")
-top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Performance_Score"]]
+top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Performance_Score", "Department_Name"]]
 st.dataframe(top_paid)
 
-# Visualization: Tenure vs Salary
-st.subheader("Tenure vs Salary")
+# Visualization: Tenure vs Salary by Department
+st.subheader("Tenure vs Salary by Department")
 tenure_salary_fig = px.scatter(
     filtered_data,
     x="Tenure",
     y="Salary",
-    color="Gender",
+    color="Department_Name",
     hover_data=["Name", "City"],
-    title="Tenure vs Salary"
+    title="Tenure vs Salary by Department"
 )
 st.plotly_chart(tenure_salary_fig)
 
