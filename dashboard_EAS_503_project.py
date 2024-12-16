@@ -206,7 +206,7 @@ pie_chart = px.pie(
     values='Employee_Count', 
     title='Employee Distribution by Department',
     color='Department_Name',  # Color each section differently
-    color_discrete_sequence=px.colors.qualitative.Viridis  # Color palette
+    color_discrete_sequence=px.colors.qualitative.Set1  # Valid qualitative color palette
 )
 st.plotly_chart(pie_chart)
 
