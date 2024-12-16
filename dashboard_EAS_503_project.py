@@ -192,17 +192,19 @@ top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Perf
 st.dataframe(top_paid)
 
 # Visualization: Tenure vs Salary by Department
-# Visualization: Salary Distribution by Department and Tenure (Boxplot)
-st.subheader("Salary Distribution by Department and Tenure")
-boxplot_fig = px.box(
-    filtered_data,
+# Visualization: Average Salary by Department and Tenure (Bar Chart)
+st.subheader("Average Salary by Department and Tenure")
+avg_salary_dept_tenure = filtered_data.groupby(["Department_Name", "Tenure"])["Salary"].mean().reset_index()
+bar_fig = px.bar(
+    avg_salary_dept_tenure,
     x="Department_Name",
     y="Salary",
-    color="Department_Name",
-    facet_col="Tenure",  # Facet by tenure to show distribution across different tenure groups
-    title="Salary Distribution by Department and Tenure"
+    color="Tenure",
+    title="Average Salary by Department and Tenure",
+    barmode="group"
 )
-st.plotly_chart(boxplot_fig)
+st.plotly_chart(bar_fig)
+
 
 
 # Create Age Groups
