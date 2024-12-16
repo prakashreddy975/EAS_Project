@@ -192,16 +192,18 @@ top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Perf
 st.dataframe(top_paid)
 
 # Visualization: Tenure vs Salary by Department
-st.subheader("Tenure vs Salary by Department")
-tenure_salary_fig = px.scatter(
+# Visualization: Salary Distribution by Department and Tenure (Boxplot)
+st.subheader("Salary Distribution by Department and Tenure")
+boxplot_fig = px.box(
     filtered_data,
-    x="Tenure",
+    x="Department_Name",
     y="Salary",
     color="Department_Name",
-    hover_data=["Name", "City"],
-    title="Tenure vs Salary by Department"
+    facet_col="Tenure",  # Facet by tenure to show distribution across different tenure groups
+    title="Salary Distribution by Department and Tenure"
 )
-st.plotly_chart(tenure_salary_fig)
+st.plotly_chart(boxplot_fig)
+
 
 # Create Age Groups
 filtered_data["Age_Group"] = pd.cut(filtered_data["Age"], bins=[20, 30, 40, 50, 60, 70], labels=["20-30", "30-40", "40-50", "50-60", "60-70"])
