@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
+import matplotlib.pyplot as plt
 
 # Connect to the updated database
 conn = sqlite3.connect('employee_database_new.db')
