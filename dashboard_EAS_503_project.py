@@ -4,7 +4,7 @@ import sqlite3
 import plotly.express as px
 
 # Connect to the updated database
-conn = sqlite3.connect('employee_database_new.db')
+conn = sqlite3.connect('database_employee.db')
 
 # Helper function to fetch data from SQL
 def fetch_data(query):
@@ -16,7 +16,7 @@ def fetch_data(query):
 
 # Load data for analysis
 employee_query = """
-SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, e.Tenure, 
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, 
        l.City, l.Country
 FROM Employee e
 JOIN Location l ON e.Location_ID = l.Location_ID
@@ -34,7 +34,7 @@ department_data = fetch_data(department_query)
 
 # Employee-Department relationship query
 employee_department_query = """
-SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, e.Tenure, 
+SELECT e.Employee_ID, e.Name, e.Gender, e.Age, e.Education, e.Join_Date, 
        l.City, l.Country, 
        s.Salary, s.Annual_Bonus, s.Bonus_Percentage,
        p.Performance_Score, p.Working_Hours,
@@ -53,9 +53,22 @@ st.title("Employee Data Analysis Dashboard")
 
 # Sidebar Filters
 st.sidebar.header("Filters")
+
+# Country filter (dropdown with multiple selections)
+selected_country = st.sidebar.multiselect(
+    "Select Country", 
+    options=employee_data["Country"].unique(), 
+    default=employee_data["Country"].unique()
+)
+
+# City filter (dropdown dependent on selected countries, with multiselect)
+cities_in_selected_countries = merged_data[merged_data["Country"].isin(selected_country)]["City"].unique()
+selected_cities = st.sidebar.multiselect("Select Cities", options=cities_in_selected_countries)
+
+# Gender filter
 selected_gender = st.sidebar.multiselect("Select Gender", options=employee_data["Gender"].unique(), default=employee_data["Gender"].unique())
-selected_city = st.sidebar.multiselect("Select City", options=employee_data["City"].unique(), default=employee_data["City"].unique())
-selected_country = st.sidebar.multiselect("Select Country", options=employee_data["Country"].unique(), default=employee_data["Country"].unique())  # New Country filter
+
+# Salary range filter
 selected_salary_range = st.sidebar.slider(
     "Select Salary Range", 
     min_value=float(salary_data["Salary"].min()), 
@@ -63,23 +76,24 @@ selected_salary_range = st.sidebar.slider(
     value=(float(salary_data["Salary"].min()), float(salary_data["Salary"].max()))
 )
 
-selected_age_range = st.sidebar.slider("Select Age Range", 
-                                       min_value=int(employee_data["Age"].min()), 
-                                       max_value=int(employee_data["Age"].max()), 
-                                       value=(int(employee_data["Age"].min()), int(employee_data["Age"].max())))
-selected_tenure_range = st.sidebar.slider("Select Tenure Range (Years)", 
-                                          min_value=int(employee_data["Tenure"].min()), 
-                                          max_value=int(employee_data["Tenure"].max()), 
-                                          value=(int(employee_data["Tenure"].min()), int(employee_data["Tenure"].max())))
+# Age range filter
+min_age = int(merged_data["Age"].min())
+max_age = int(merged_data["Age"].max())
+
+selected_age_range = st.sidebar.slider(
+    "Select Age Range", 
+    min_value=min_age, 
+    max_value=max_age, 
+    value=(min_age, max_age)
+)
 
 # Apply Filters
 filtered_data = merged_data[
     (merged_data["Gender"].isin(selected_gender)) &
-    (merged_data["City"].isin(selected_city)) &
-    (merged_data["Country"].isin(selected_country)) &  # Ensure this filter is also applied
+    (merged_data["City"].isin(selected_cities)) &  # Updated to handle multiple cities
+    (merged_data["Country"].isin(selected_country)) &  # Updated to handle multiple countries
     (merged_data["Salary"].between(selected_salary_range[0], selected_salary_range[1])) &
-    (merged_data["Age"].between(selected_age_range[0], selected_age_range[1])) &
-    (merged_data["Tenure"].between(selected_tenure_range[0], selected_tenure_range[1]))  # Apply tenure filter
+    (merged_data["Age"].between(selected_age_range[0], selected_age_range[1]))  # Filtering based on age range
 ]
 
 # Dynamic Metrics
@@ -100,14 +114,13 @@ gender_city_fig = px.sunburst(
 )
 st.plotly_chart(gender_city_fig)
 
-# Visualization 2: Salary vs Performance Score with Tenure Comparison
+# Visualization 2: Salary vs Performance Score Comparison
 filtered_data.loc[:, 'Salary'] = pd.to_numeric(filtered_data['Salary'], errors='coerce')
 filtered_data.loc[:, 'Performance_Score'] = pd.to_numeric(filtered_data['Performance_Score'], errors='coerce')
-filtered_data.loc[:, 'Tenure'] = pd.to_numeric(filtered_data['Tenure'], errors='coerce')
 filtered_data.loc[:, 'Working_Hours'] = pd.to_numeric(filtered_data['Working_Hours'], errors='coerce')
 
 # Drop rows with any NaN values in the relevant columns
-filtered_data = filtered_data.dropna(subset=['Salary', 'Performance_Score', 'Tenure', 'Working_Hours'])
+filtered_data = filtered_data.dropna(subset=['Salary', 'Performance_Score', 'Working_Hours'])
 
 # Now proceed to plot
 st.subheader("Performance Score by Salary")
@@ -115,10 +128,9 @@ salary_perf_fig = px.scatter(
     filtered_data,
     x="Salary",
     y="Performance_Score",
-    color="Tenure",  # Make sure Tenure is numeric or categorical
     size="Working_Hours",  # Ensure Working_Hours is numeric
     hover_data=["Name", "Age", "City", "Gender"],
-    title="Salary vs Performance Score (Colored by Tenure)",
+    title="Salary vs Performance Score",
     color_continuous_scale="Viridis"
 )
 
@@ -163,7 +175,7 @@ st.plotly_chart(dept_salary_fig)
 
 # Visualization 6: Correlation Heatmap
 st.subheader("Correlation Heatmap")
-numeric_data = filtered_data[["Age", "Salary", "Annual_Bonus", "Bonus_Percentage", "Performance_Score", "Working_Hours", "Tenure"]]
+numeric_data = filtered_data[["Age", "Salary", "Annual_Bonus", "Bonus_Percentage", "Performance_Score", "Working_Hours"]]
 correlation = numeric_data.corr()
 heatmap_fig = px.imshow(
     correlation,
@@ -185,8 +197,6 @@ salary_gender_fig = px.box(
     boxmode="overlay"
 )
 st.plotly_chart(salary_gender_fig)
-
-
 
 # Fetch employee department data
 empl_dept_query = """
@@ -214,22 +224,6 @@ st.plotly_chart(pie_chart)
 st.subheader("Top 10 Highest Paid Employees")
 top_paid = filtered_data.nlargest(10, "Salary")[["Name", "Salary", "City", "Performance_Score", "Department_Name"]]
 st.dataframe(top_paid)
-
-# Visualization: Tenure vs Salary by Department
-# Visualization: Average Salary by Department and Tenure (Bar Chart)
-st.subheader("Average Salary by Department and Tenure")
-avg_salary_dept_tenure = filtered_data.groupby(["Department_Name", "Tenure"])["Salary"].mean().reset_index()
-bar_fig = px.bar(
-    avg_salary_dept_tenure,
-    x="Department_Name",
-    y="Salary",
-    color="Tenure",
-    title="Average Salary by Department and Tenure",
-    barmode="group"
-)
-st.plotly_chart(bar_fig)
-
-
 
 # Create Age Groups
 filtered_data["Age_Group"] = pd.cut(filtered_data["Age"], bins=[20, 30, 40, 50, 60, 70], labels=["20-30", "30-40", "40-50", "50-60", "60-70"])
@@ -279,18 +273,9 @@ correlation = numeric_data.corr()
 st.write("### Correlation between Salary and Performance Score")
 st.write(correlation.loc['Salary', 'Performance_Score'])
 
-# Check if 'Performance_Score' exists and is numeric
-if 'Performance_Score' in filtered_data.columns:
-    # Convert to numeric if necessary (handling any potential non-numeric values)
-    filtered_data['Performance_Score'] = pd.to_numeric(filtered_data['Performance_Score'], errors='coerce')
-    
-    # Calculate the variance, excluding NaN values
-    performance_variance = filtered_data['Performance_Score'].var()
-    
-    # Display the result
-    st.write(f"### Variance of Performance Score: {performance_variance:.2f}")
-else:
-    st.write("### Performance_Score column is missing.")
+# Display the variance in Performance Score
+performance_variance = filtered_data['Performance_Score'].var()
+st.write(f"### Variance in Performance Score: {performance_variance:.2f}")
 
 # Display Filtered Data
 st.write("### Filtered Data")
