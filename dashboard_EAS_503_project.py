@@ -173,6 +173,40 @@ dept_salary_fig = px.box(
 )
 st.plotly_chart(dept_salary_fig)
 
+# Visualization: Average Salary by Department (Matplotlib Bar Chart)
+st.subheader("Average Salary by Department (Matplotlib)")
+avg_salary_by_dept = pd.read_sql_query("""
+    SELECT Department.Department_Name, AVG(Salary.Salary) AS Avg_Salary
+    FROM Employee_Department
+    INNER JOIN Department ON Employee_Department.Department_ID = Department.Department_ID
+    INNER JOIN Salary ON Employee_Department.Employee_ID = Salary.Employee_ID
+    GROUP BY Department.Department_Name;
+""", conn)
+
+fig1, ax1 = plt.subplots()
+sns.barplot(data=avg_salary_by_dept, x='Department_Name', y='Avg_Salary', ax=ax1)
+ax1.set_title('Average Salary by Department')
+ax1.set_xlabel('Department')
+ax1.set_ylabel('Average Salary')
+plt.xticks(rotation=45)
+st.pyplot(fig1)  # Display the Matplotlib figure in Streamlit
+
+# Visualization: Salary vs Performance Score (Matplotlib Scatter Plot)
+st.subheader("Salary vs Performance Score (Matplotlib)")
+salary_df = pd.read_sql_query("""
+    SELECT Salary.Employee_ID, Salary.Salary, Performance.Performance_Score 
+    FROM Salary 
+    INNER JOIN Performance ON Salary.Employee_ID = Performance.Employee_ID;
+""", conn)
+
+fig2, ax2 = plt.subplots()
+sns.scatterplot(data=salary_df, x='Performance_Score', y='Salary', ax=ax2)
+ax2.set_title('Salary vs Performance Score')
+ax2.set_xlabel('Performance Score')
+ax2.set_ylabel('Salary')
+st.pyplot(fig2)  # Display the Matplotlib figure in Streamlit
+
+
 # Visualization 6: Correlation Heatmap
 st.subheader("Correlation Heatmap")
 numeric_data = filtered_data[["Age", "Salary", "Annual_Bonus", "Bonus_Percentage", "Performance_Score", "Working_Hours"]]
