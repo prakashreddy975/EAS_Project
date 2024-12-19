@@ -243,17 +243,6 @@ age_perf_fig = px.bar(
 )
 st.plotly_chart(age_perf_fig)
 
-# Visualization: Join Date Distribution
-st.subheader("Join Date Distribution")
-join_date_fig = px.histogram(
-    filtered_data,
-    x="Join_Date",
-    title="Join Date Distribution",
-    nbins=30,
-    color="Gender"
-)
-st.plotly_chart(join_date_fig)
-
 # Visualization: Performance Score vs Working Hours
 st.subheader("Performance Score vs Working Hours")
 working_hours_perf_fig = px.scatter(
